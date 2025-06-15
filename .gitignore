@@ -9,4 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
+# Project specific settings files
 .idea
+
+# Raw CSV files
+app/data/raw/*.csv
