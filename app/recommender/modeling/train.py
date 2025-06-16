@@ -117,8 +117,9 @@ class MovieRecommenderTrainer(BaseRunner):
     def run(self) -> None:
         """Executes the complete model training and saving pipeline.
 
-        This method orchestrates loading of the processed movie data, training and saving the model.
-        The model is saved as "recommendation_model.pkl" in "app/models/" directory within the project.
+        This method orchestrates loading of the processed movie data, training and
+        saving the model. The model is saved as "recommendation_model.pkl" in
+        "app/models/" directory within the project.
 
         Returns:
             None
