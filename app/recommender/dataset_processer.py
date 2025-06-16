@@ -1,8 +1,10 @@
 import os
 import pandas as pd
 
+from .base.runner import BaseRunner
 
-class DatasetProcesser:
+
+class DatasetProcesser(BaseRunner):
     """Processes raw MovieLens dataset files.
 
     This class handles loading, cleaning, and merging movie-related data from
@@ -63,7 +65,7 @@ class DatasetProcesser:
             None
         """
 
-        self.project_dir = project_dir
+        super().__init__(project_dir)
         self.raw_data_dir = raw_data_dir
         self.movies_csv_file = movies_csv_file
         self.ratings_csv_file = ratings_csv_file
@@ -239,37 +241,20 @@ class DatasetProcesser:
 
         Returns:
             None
+
+        Raises:
+            FileNotFoundError:
+                If at least one of the required MovieLens dataset files does not exist.
         """
 
         self._verify_dataset_files_exist()
-
-        output_dir = os.path.join(self.project_dir, "app/data/processed")
-        output_filepath = os.path.join(output_dir, "movies_processed.csv")
-
-        os.makedirs(output_dir, exist_ok=True)
 
         movies_df, ratings_df, links_df, tags_df = self._load_raw_data()
 
         movies_clean_df = self._process_data(movies_df, ratings_df, links_df, tags_df)
         movies_final_df = self._create_movie_profiles(movies_clean_df)
 
-        movies_final_df.to_csv(output_filepath, index=False)
-
-        print(f"Dataset processed and saved to '{output_filepath}'")
-
-    def _get_file_path(self, file_name: str) -> str:
-        """Constructs the full path for a given file name.
-
-        Args:
-            file_name (str):
-                The name of the file.
-
-        Returns:
-            str:
-                The full path to the file.
-        """
-
-        return os.path.join(self.raw_data_dir, file_name)
+        self._save_output(movies_final_df, "movies_processed.csv")
 
     def _verify_dataset_files_exist(self) -> None:
         """Checks if all required MovieLens dataset files exist.
@@ -292,7 +277,7 @@ class DatasetProcesser:
         missing_files = [
             expected_name
             for expected_name, actual_name in required_files.items()
-            if not os.path.exists(self._get_file_path(actual_name))
+            if not os.path.exists(self._get_file_path(self.raw_data_dir, actual_name))
         ]
 
         if missing_files:
@@ -310,10 +295,10 @@ class DatasetProcesser:
                 A tuple containing DataFrames for movies, ratings, links, and tags.
         """
 
-        movies_path = self._get_file_path(self.movies_csv_file)
-        ratings_path = self._get_file_path(self.ratings_csv_file)
-        links_path = self._get_file_path(self.links_csv_file)
-        tags_path = self._get_file_path(self.tags_csv_file)
+        movies_path = self._get_file_path(self.raw_data_dir, self.movies_csv_file)
+        ratings_path = self._get_file_path(self.raw_data_dir, self.ratings_csv_file)
+        links_path = self._get_file_path(self.raw_data_dir, self.links_csv_file)
+        tags_path = self._get_file_path(self.raw_data_dir, self.tags_csv_file)
 
         movies_df = pd.read_csv(movies_path)
         ratings_df = pd.read_csv(ratings_path)
@@ -467,3 +452,26 @@ class DatasetProcesser:
         )
 
         return movies_df
+
+    def _save_output(self, output_data: pd.DataFrame, file_name: str) -> None:
+        """Saves the processed DataFrame to a CSV file.
+
+        Args:
+            output_data (pd.DataFrame):
+                The processed DataFrame to be saved.
+            file_name (str):
+                The name of the file to save the DataFrame as.
+                For example, "movies_processed.csv".
+
+        Returns:
+            None
+        """
+
+        output_dir = os.path.join(self.project_dir, "app/data/processed")
+        output_filepath = os.path.join(output_dir, file_name)
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        output_data.to_csv(output_filepath, index=False)
+
+        print(f"Dataset processed and saved to '{output_filepath}'")

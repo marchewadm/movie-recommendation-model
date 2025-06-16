@@ -10,16 +10,23 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from scipy.sparse import csr_matrix
 from numpy import ndarray
 
+from ..base.runner import BaseRunner
+
 
 class TrainedModel(TypedDict):
     """A TypedDict to define the structure of the trained recommendation model.
 
     Attributes:
-        movies_df (pd.DataFrame): The DataFrame containing movie metadata.
-        tfidf_vectorizer (TfidfVectorizer): The fitted TF-IDF vectorizer.
-        tfidf_matrix (csr_matrix): The TF-IDF feature matrix.
-        cosine_sim (ndarray): The cosine similarity matrix.
-        movie_id_to_index (pd.Series): A mapping from movie ID to DataFrame index.
+        movies_df (pd.DataFrame):
+            The DataFrame containing movie metadata.
+        tfidf_vectorizer (TfidfVectorizer):
+            The fitted TF-IDF vectorizer.
+        tfidf_matrix (csr_matrix):
+            The TF-IDF feature matrix.
+        cosine_sim (ndarray):
+            The cosine similarity matrix.
+        movie_id_to_index (pd.Series):
+            A mapping from movie ID to DataFrame index.
     """
 
     movies_df: pd.DataFrame
@@ -29,7 +36,7 @@ class TrainedModel(TypedDict):
     movie_id_to_index: pd.Series
 
 
-class MovieRecommenderTrainer:
+class MovieRecommenderTrainer(BaseRunner):
     """Trains a movie recommendation model based on processed movie data.
 
     This class handles loading the processed movie dataset, extracting features
@@ -68,6 +75,7 @@ class MovieRecommenderTrainer:
             None
         """
 
+        super().__init__(project_dir)
         self.project_dir = project_dir
         self.processed_data_dir = processed_data_dir
         self.movies_csv_file = movies_csv_file
@@ -109,6 +117,9 @@ class MovieRecommenderTrainer:
     def run(self) -> None:
         """Executes the complete model training and saving pipeline.
 
+        This method orchestrates loading of the processed movie data, training and saving the model.
+        The model is saved as "recommendation_model.pkl" in "app/models/" directory within the project.
+
         Returns:
             None
 
@@ -119,32 +130,10 @@ class MovieRecommenderTrainer:
 
         self._verify_dataset_files_exist()
 
-        output_dir = os.path.join(self.project_dir, "app/models")
-        output_filepath = os.path.join(output_dir, "recommendation_model.pkl")
-
-        os.makedirs(output_dir, exist_ok=True)
-
         movies_df = self._load_processed_data()
         model = self._train_model(movies_df)
 
-        with open(output_filepath, "wb") as f:
-            pickle.dump(model, f)
-
-        print(f"Recommendation model saved to '{output_filepath}'")
-
-    def _get_file_path(self, file_name: str) -> str:
-        """Constructs the full path for a given file name.
-
-        Args:
-            file_name (str):
-                The name of the file.
-
-        Returns:
-            str:
-                The full path to the file.
-        """
-
-        return os.path.join(self.processed_data_dir, file_name)
+        self._save_output(model, "recommendation_model.pkl")
 
     def _verify_dataset_files_exist(self) -> None:
         """Checks if all required processed dataset files exist.
@@ -164,7 +153,9 @@ class MovieRecommenderTrainer:
         missing_files = [
             expected_name
             for expected_name, actual_name in required_files.items()
-            if not os.path.exists(self._get_file_path(actual_name))
+            if not os.path.exists(
+                self._get_file_path(self.processed_data_dir, actual_name)
+            )
         ]
 
         if missing_files:
@@ -180,8 +171,32 @@ class MovieRecommenderTrainer:
                 A DataFrame containing the processed movie data.
         """
 
-        movies_path = self._get_file_path(self.movies_csv_file)
+        movies_path = self._get_file_path(self.processed_data_dir, self.movies_csv_file)
 
         movies_df = pd.read_csv(movies_path)
 
         return movies_df
+
+    def _save_output(self, output_data: TrainedModel, file_name: str) -> None:
+        """Saves the trained recommendation model to a pickle file.
+
+        Args:
+            output_data (TrainedModel):
+                The trained model object to be saved.
+            file_name (str):
+                The name of the file to save the model as.
+                For example, "recommendation_model.pkl".
+
+        Returns:
+            None
+        """
+
+        output_dir = os.path.join(self.project_dir, "app/models")
+        output_filepath = os.path.join(output_dir, file_name)
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        with open(output_filepath, "wb") as f:
+            pickle.dump(output_data, f)
+
+        print(f"Recommendation model saved to '{output_filepath}'")
