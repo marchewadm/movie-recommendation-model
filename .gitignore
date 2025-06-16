@@ -17,3 +17,6 @@ app/data/raw/*.csv
 
 # Processed CSV files
 app/data/processed/
+
+# Serialized models, predictions etc.
+app/models/
