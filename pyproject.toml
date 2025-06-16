@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "black[jupyter]>=25.1.0",
+    "flake8-bugbear>=24.12.12",
+    "flake8-class-attributes-order>=0.3.0",
     "matplotlib>=3.10.3",
     "pandas>=2.3.0",
     "scikit-learn>=1.7.0",
