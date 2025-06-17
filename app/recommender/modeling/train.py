@@ -1,8 +1,6 @@
 import os
 import pickle
 
-from typing import TypedDict
-
 import pandas as pd
 
 from sklearn.metrics.pairwise import cosine_similarity
@@ -10,30 +8,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from scipy.sparse import csr_matrix
 from numpy import ndarray
 
+from app.utils.model_types import TrainedModel
 from ..base.runner import BaseRunner
-
-
-class TrainedModel(TypedDict):
-    """A TypedDict to define the structure of the trained recommendation model.
-
-    Attributes:
-        movies_df (pd.DataFrame):
-            The DataFrame containing movie metadata.
-        tfidf_vectorizer (TfidfVectorizer):
-            The fitted TF-IDF vectorizer.
-        tfidf_matrix (csr_matrix):
-            The TF-IDF feature matrix.
-        cosine_sim (ndarray):
-            The cosine similarity matrix.
-        movie_id_to_index (pd.Series):
-            A mapping from movie ID to DataFrame index.
-    """
-
-    movies_df: pd.DataFrame
-    tfidf_vectorizer: TfidfVectorizer
-    tfidf_matrix: csr_matrix
-    cosine_sim: ndarray
-    movie_id_to_index: pd.Series
 
 
 class MovieRecommenderTrainer(BaseRunner):
