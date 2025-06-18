@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scripts import run_dataset_processer, run_movie_recommender_trainer
+from app.scripts import run_dataset_processer, run_movie_recommender_trainer
 
 
 PROJECT_DIR = Path.cwd()

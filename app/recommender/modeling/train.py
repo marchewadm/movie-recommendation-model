@@ -9,7 +9,7 @@ from scipy.sparse import csr_matrix
 from numpy import ndarray
 
 from app.utils.model_types import TrainedModel
-from ..base.runner import BaseRunner
+from app.recommender.base.runner import BaseRunner
 
 
 class MovieRecommenderTrainer(BaseRunner):

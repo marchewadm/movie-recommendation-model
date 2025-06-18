@@ -1,5 +1,5 @@
-from recommender.dataset_processer import DatasetProcesser
-from recommender.modeling.train import MovieRecommenderTrainer
+from app.recommender.dataset_processer import DatasetProcesser
+from app.recommender.modeling.train import MovieRecommenderTrainer
 
 
 def run_dataset_processer(project_dir: str, raw_data_dir: str) -> None:

@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from .base.runner import BaseRunner
+from app.recommender.base.runner import BaseRunner
 
 
 class DatasetProcesser(BaseRunner):
