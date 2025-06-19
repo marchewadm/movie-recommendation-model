@@ -1,5 +1,7 @@
 import os
 
+import pandas as pd
+
 from abc import ABC, abstractmethod
 
 
@@ -40,6 +42,11 @@ class BaseRunner(ABC):
         """
 
         return os.path.join(directory, file_name)
+
+    @staticmethod
+    @abstractmethod
+    def _filter_columns_for_export(movies_df: pd.DataFrame) -> pd.DataFrame:
+        pass
 
     @abstractmethod
     def run(self) -> None:

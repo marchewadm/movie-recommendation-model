@@ -71,7 +71,7 @@ class MovieRecommenderTrainer(BaseRunner):
 
         tfidf_vectorizer = TfidfVectorizer(ngram_range=(1, 2), min_df=3)
         tfidf_matrix: csr_matrix = tfidf_vectorizer.fit_transform(
-            movies_df["movie_profile"]
+            movies_df["movieProfile"]
         )
 
         cosine_sim: ndarray = cosine_similarity(tfidf_matrix, tfidf_matrix)
@@ -82,13 +82,27 @@ class MovieRecommenderTrainer(BaseRunner):
 
         model: TrainedModel = {
             "movies_df": movies_df,
-            "tfidf_vectorizer": tfidf_vectorizer,
-            "tfidf_matrix": tfidf_matrix,
             "cosine_sim": cosine_sim,
             "movie_id_to_index": movie_id_to_index,
         }
 
         return model
+
+    @staticmethod
+    def _filter_columns_for_export(movies_df: pd.DataFrame) -> pd.DataFrame:
+        """Filters out unnecessary columns before exporting the DataFrame to CSV.
+
+        Args:
+            movies_df (pd.DataFrame):
+                The input DataFrame containing movie data, potentially including
+                "movieProfile" column.
+
+        Returns:
+            pd.DataFrame:
+                A new DataFrame with the "movieProfile" column removed.
+        """
+
+        return movies_df.drop("movieProfile", axis=1)
 
     def run(self) -> None:
         """Executes the complete model training and saving pipeline.
@@ -110,7 +124,9 @@ class MovieRecommenderTrainer(BaseRunner):
         movies_df = self._load_processed_data()
         model = self._train_model(movies_df)
 
-        self._save_output(model, "recommendation_model.pkl")
+        model["movies_df"] = self._filter_columns_for_export(model["movies_df"])
+
+        self._save_output(model)
 
     def _verify_dataset_files_exist(self) -> None:
         """Checks if all required processed dataset files exist.
@@ -124,7 +140,7 @@ class MovieRecommenderTrainer(BaseRunner):
         """
 
         required_files = {
-            "processed_movies.csv": self.movies_csv_file,
+            "movies_processed.csv": self.movies_csv_file,
         }
 
         missing_files = [
@@ -154,7 +170,9 @@ class MovieRecommenderTrainer(BaseRunner):
 
         return movies_df
 
-    def _save_output(self, output_data: TrainedModel, file_name: str) -> None:
+    def _save_output(
+        self, output_data: TrainedModel, file_name: str = "recommendation_model.pkl"
+    ) -> None:
         """Saves the trained recommendation model to a pickle file.
 
         Args:
@@ -162,7 +180,7 @@ class MovieRecommenderTrainer(BaseRunner):
                 The trained model object to be saved.
             file_name (str):
                 The name of the file to save the model as.
-                For example, "recommendation_model.pkl".
+                Defaults to "recommendation_model.pkl".
 
         Returns:
             None
