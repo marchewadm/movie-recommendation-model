@@ -1,5 +1,6 @@
 from app.recommender.dataset_processer import DatasetProcesser
 from app.recommender.modeling.train import MovieRecommenderTrainer
+from app.recommender.modeling.predict import MovieRecommenderEngine
 
 
 def run_dataset_processer(project_dir: str, raw_data_dir: str) -> None:
@@ -56,3 +57,30 @@ def run_movie_recommender_trainer(project_dir: str, processed_data_dir: str) -> 
     )
 
     movie_recommender_trainer.run()
+
+
+def run_movie_recommender_engine(
+    movie_id: int, project_dir: str, model_dir: str
+) -> None:
+    """Initializes and runs the MovieRecommenderEngine.
+
+    This function creates an instance of "MovieRecommenderEngine" with the specified
+    project and model directories. It then initiates the recommendation process
+    by calling the "run" method of the "MovieRecommenderEngine" instance for a
+    given movie ID.
+
+    Args:
+        movie_id (int):
+            The ID of the movie for which to generate recommendations.
+        project_dir (str):
+            The root directory of the project as a string.
+        model_dir (str):
+            The directory where the trained recommendation model is located as a string.
+    """
+
+    movie_recommender_engine = MovieRecommenderEngine(
+        project_dir,
+        model_dir,
+    )
+
+    movie_recommender_engine.run(movie_id)

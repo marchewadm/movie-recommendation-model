@@ -1,17 +1,28 @@
 from pathlib import Path
 
-from app.scripts import run_dataset_processer, run_movie_recommender_trainer
+from app.scripts import (
+    run_dataset_processer,
+    run_movie_recommender_trainer,
+    run_movie_recommender_engine,
+)
 
 
-PROJECT_DIR = Path.cwd()
+SCRIPT_DIR = Path(__file__).parent
+PROJECT_DIR = SCRIPT_DIR.parent
+
 DATA_DIR = PROJECT_DIR / "app" / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 
+MODELS_DIR = PROJECT_DIR / "app" / "models"
+
 
 def main() -> None:
-    run_dataset_processer(str(PROJECT_DIR), str(RAW_DATA_DIR))
-    run_movie_recommender_trainer(str(PROJECT_DIR), str(PROCESSED_DATA_DIR))
+    str_project_dir = str(PROJECT_DIR)
+
+    run_dataset_processer(str_project_dir, str(RAW_DATA_DIR))
+    run_movie_recommender_trainer(str_project_dir, str(PROCESSED_DATA_DIR))
+    run_movie_recommender_engine(296, str_project_dir, str(MODELS_DIR))
 
 
 if __name__ == "__main__":

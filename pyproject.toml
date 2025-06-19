@@ -10,5 +10,6 @@ dependencies = [
     "flake8-class-attributes-order>=0.3.0",
     "matplotlib>=3.10.3",
     "pandas>=2.3.0",
+    "prettytable>=3.16.0",
     "scikit-learn>=1.7.0",
 ]
