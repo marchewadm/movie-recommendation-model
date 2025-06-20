@@ -1,4 +1,5 @@
-from app.recommender.dataset_processer import DatasetProcesser
+from app.recommender.dataset import DatasetProcesser
+from app.recommender.features import FeatureEngineer
 from app.recommender.modeling.train import MovieRecommenderTrainer
 from app.recommender.modeling.predict import MovieRecommenderEngine
 
@@ -31,6 +32,30 @@ def run_dataset_processer(project_dir: str, raw_data_dir: str) -> None:
     )
 
     dataset_processer.run()
+
+
+def run_feature_engineer(project_dir: str, interim_data_dir: str) -> None:
+    """Initializes and runs the FeatureEngineer.
+
+    This function creates an instance of "MovieRecommenderEngine" with the specified
+    project and interim data directories. It then executes a data processing
+    pipeline by calling the "run" method of the "MovieRecommenderEngine" instance.
+
+    Args:
+        project_dir (str):
+            The root directory of the project.
+        interim_data_dir (str):
+            The directory containing interim movie and rating data.
+
+    Returns:
+        None
+    """
+
+    feature_engineer = FeatureEngineer(
+        project_dir, interim_data_dir, "movies_interim.csv", "ratings_interim.csv"
+    )
+
+    feature_engineer.run()
 
 
 def run_movie_recommender_trainer(project_dir: str, processed_data_dir: str) -> None:
@@ -78,6 +103,9 @@ def run_movie_recommender_engine(
             The directory where the trained recommendation model is located as a string.
         movie_id (int):
             The ID of the movie for which to generate recommendations.
+
+    Returns:
+        None
     """
 
     movie_recommender_engine = MovieRecommenderEngine(project_dir, model_dir, movie_id)

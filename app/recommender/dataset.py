@@ -1,6 +1,8 @@
 import os
+
 import pandas as pd
 
+from app.utils.model_types import OutputData
 from app.recommender.base.runner import BaseRunner
 
 
@@ -16,25 +18,20 @@ class DatasetProcesser(BaseRunner):
             The root directory of the project.
         raw_data_dir (str):
             The directory where the raw MovieLens dataset CSV files are located.
-            Defaults to "app/data/raw".
         movies_csv_file (str):
             The filename of the movies CSV file.
-            Defaults to "movies.csv".
         ratings_csv_file (str):
             The filename of the ratings CSV file.
-            Defaults to "ratings.csv".
         links_csv_file (str):
             The filename of the links CSV file.
-            Defaults to "links.csv".
         tags_csv_file (str):
             The filename of the tags CSV file.
-            Defaults to "tags.csv".
     """
 
     def __init__(
         self,
         project_dir: str,
-        raw_data_dir: str = "app/data/raw",
+        raw_data_dir: str,
         movies_csv_file: str = "movies.csv",
         ratings_csv_file: str = "ratings.csv",
         links_csv_file: str = "links.csv",
@@ -47,7 +44,6 @@ class DatasetProcesser(BaseRunner):
                 The root directory of the project.
             raw_data_dir (str):
                 The directory where the raw MovieLens dataset CSV files are located.
-                Defaults to "app/data/raw".
             movies_csv_file (str):
                 The filename of the movies CSV file.
                 Defaults to "movies.csv".
@@ -66,6 +62,7 @@ class DatasetProcesser(BaseRunner):
         """
 
         super().__init__(project_dir)
+
         self.raw_data_dir = raw_data_dir
         self.movies_csv_file = movies_csv_file
         self.ratings_csv_file = ratings_csv_file
@@ -110,7 +107,7 @@ class DatasetProcesser(BaseRunner):
     def _clean_links(links_df: pd.DataFrame) -> pd.DataFrame:
         """Cleansing the links DataFrame.
 
-        Drops the "imdbId" column and converts "tmdbId" to nullable integer type.
+        Drops the "imdbId" column and converts "tmdbId" to a nullable integer type.
 
         Args:
             links_df (pd.DataFrame):
@@ -128,49 +125,12 @@ class DatasetProcesser(BaseRunner):
         return links_df
 
     @staticmethod
-    def _add_rating_stats(
-        ratings_df: pd.DataFrame,
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """Calculates average ratings and rating counts for movies.
-
-        Args:
-            ratings_df (pd.DataFrame):
-                The input ratings DataFrame.
-
-        Returns:
-            tuple[pd.DataFrame, pd.DataFrame]:
-                A tuple containing average ratings and the rating counts.
-        """
-
-        average_ratings_df = (
-            ratings_df.groupby("movieId")["rating"]
-            .mean()
-            .reset_index()
-            .rename(columns={"rating": "averageRating"})
-        )
-
-        rating_counts_df = (
-            ratings_df.groupby("movieId")["rating"]
-            .count()
-            .reset_index()
-            .rename(columns={"rating": "ratingCount"})
-        )
-
-        return average_ratings_df, rating_counts_df
-
-    @staticmethod
-    def _merge_all(
+    def _merge_initial_data(
         movies_df: pd.DataFrame,
         tags_df: pd.DataFrame,
         links_df: pd.DataFrame,
-        average_ratings_df: pd.DataFrame,
-        rating_counts_df: pd.DataFrame,
     ) -> pd.DataFrame:
-        """Merges all processed DataFrames into the main movies DataFrame.
-
-        Performs left merges with tags, links, average ratings, and rating counts.
-        Drops rows where "tmdbId" is missing, and fills NaN values in "tags",
-        "averageRating", and "ratingCount" columns.
+        """Merges movies, tags, and links DataFrames.
 
         Args:
             movies_df (pd.DataFrame):
@@ -179,10 +139,6 @@ class DatasetProcesser(BaseRunner):
                 DataFrame with processed tags.
             links_df (pd.DataFrame):
                 DataFrame with processed links.
-            average_ratings_df (pd.DataFrame):
-                DataFrame with processed average ratings.
-            rating_counts_df (pd.DataFrame):
-                DataFrame with processed rating counts.
 
         Returns:
             pd.DataFrame:
@@ -193,67 +149,13 @@ class DatasetProcesser(BaseRunner):
         movies_df = movies_df.merge(links_df, on="movieId", how="left").dropna(
             subset=["tmdbId"]
         )
-        movies_df = movies_df.merge(average_ratings_df, on="movieId", how="left")
-        movies_df = movies_df.merge(rating_counts_df, on="movieId", how="left")
 
         movies_df["tags"] = movies_df["tags"].fillna("")
-        movies_df["averageRating"] = movies_df["averageRating"].fillna(0.0)
-        movies_df["ratingCount"] = movies_df["ratingCount"].fillna(0).astype(int)
 
         return movies_df
 
-    @staticmethod
-    def _create_weighted_genres(genres: str | None, weight: int = 3) -> str:
-        """Generates a space-separated string of genres repeated "weight" times.
-
-        Cleans the input by removing hyphens and handles empty or missing input safely.
-
-        Args:
-            genres (str | None):
-                A string containing genres separated by "|".
-                For example, "Action|Sci-Fi|Drama".
-            weight (int):
-                How many times to repeat the genres.
-                Defaults to 3.
-
-        Returns:
-            str:
-                A space-separated string of weighted genres.
-                For example, "Action SciFi Action SciFi Action SciFi".
-        """
-
-        if not isinstance(genres, str) or not genres.strip():
-            return ""
-
-        processed_genres = [
-            genre.replace("-", "") for genre in genres.split("|") if genre.strip()
-        ]
-
-        return (" ".join(processed_genres) + " ") * weight
-
-    @staticmethod
-    def _filter_columns_for_export(movies_df: pd.DataFrame) -> pd.DataFrame:
-        """Filters out unnecessary columns before exporting the DataFrame to CSV.
-
-        Args:
-            movies_df (pd.DataFrame):
-                The input DataFrame containing movie data, potentially including
-                "genresWeighted" column.
-
-        Returns:
-            pd.DataFrame:
-                A new DataFrame with the "genresWeighted" column removed.
-        """
-
-        return movies_df.drop("genresWeighted", axis=1)
-
     def run(self) -> None:
         """Executes the complete data processing pipeline.
-
-        This method orchestrates the loading, cleaning, merging, and
-        saving of the processed movie dataset. The final processed
-        DataFrame is saved as "movies_processed.csv" in the
-        "app/data/processed" directory within the project.
 
         Returns:
             None
@@ -275,11 +177,20 @@ class DatasetProcesser(BaseRunner):
 
         movies_df, ratings_df, links_df, tags_df = self._load_raw_data()
 
-        movies_df = self._process_data(movies_df, ratings_df, links_df, tags_df)
-        movies_df = self._create_movie_profiles(movies_df)
-        movies_df = self._filter_columns_for_export(movies_df)
+        movies_df, ratings_df = self._process_data(
+            movies_df, ratings_df, links_df, tags_df
+        )
 
-        self._save_output(movies_df)
+        movies_output: OutputData = {
+            "dataframe": movies_df,
+            "filename": "movies_interim.csv",
+        }
+        ratings_output: OutputData = {
+            "dataframe": ratings_df,
+            "filename": "ratings_interim.csv",
+        }
+
+        self._save_output(movies_output, ratings_output)
 
     def _load_raw_data(
         self,
@@ -385,7 +296,7 @@ class DatasetProcesser(BaseRunner):
         ratings_df: pd.DataFrame,
         links_df: pd.DataFrame,
         tags_df: pd.DataFrame,
-    ) -> pd.DataFrame:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Cleans and merges the input DataFrames into a single processed DataFrame.
 
         Args:
@@ -399,8 +310,8 @@ class DatasetProcesser(BaseRunner):
                 The input tags DataFrame.
 
         Returns:
-            pd.DataFrame:
-                A single DataFrame with cleaned and merged movie data.
+            tuple[pd.DataFrame, pd.DataFrame]:
+                A tuple containing movies and ratings DataFrames.
         """
 
         movies_df = self._clean_movies(movies_df)
@@ -408,68 +319,39 @@ class DatasetProcesser(BaseRunner):
         tags_df = self._clean_tags(tags_df)
         links_df = self._clean_links(links_df)
 
-        average_ratings_df, rating_counts_df = self._add_rating_stats(ratings_df)
-
-        movies_df = self._merge_all(
+        movies_df = self._merge_initial_data(
             movies_df,
             tags_df,
             links_df,
-            average_ratings_df,
-            rating_counts_df,
         )
 
-        return movies_df
-
-    def _create_movie_profiles(self, movies_df: pd.DataFrame) -> pd.DataFrame:
-        """Creates a "movieProfile" column by combining relevant text features.
-
-        Generates a weighted "genresWeighted" column and then concatenates
-        "title", "genresWeighted", and "tags" to form the "movieProfile".
-
-        Args:
-            movies_df (pd.DataFrame):
-                A movies DataFrame containing "title", "genres", and "tags" columns.
-
-        Returns:
-            pd.DataFrame:
-                DataFrame with the new "genresWeighted" and "movieProfile" columns.
-        """
-
-        movies_df["genresWeighted"] = (
-            movies_df["genres"].apply(self._create_weighted_genres).str.strip()
-        )
-
-        movies_df["movieProfile"] = (
-            movies_df["title"].fillna("")
-            + " "
-            + movies_df["genresWeighted"].fillna("")
-            + " "
-            + movies_df["tags"].fillna("")
-        )
-
-        return movies_df
+        return movies_df, ratings_df
 
     def _save_output(
-        self, output_data: pd.DataFrame, file_name: str = "movies_processed.csv"
+        self, movies_output: OutputData, ratings_output: OutputData
     ) -> None:
-        """Saves the processed DataFrame to a CSV file.
+        """Saves the processed DataFrames to a CSV files.
 
         Args:
-            output_data (pd.DataFrame):
-                The processed DataFrame to be saved.
-            file_name (str):
-                The name of the file to save the DataFrame as.
-                Defaults to "movies_processed.csv".
+            movies_output (OutputData):
+                The processed movies DataFrame to be saved.
+            ratings_output (OutputData):
+                The processed ratings DataFrame to be saved.
 
         Returns:
             None
         """
 
-        output_dir = os.path.join(self.project_dir, "app/data/processed")
-        output_filepath = os.path.join(output_dir, file_name)
+        # TODO: change function name
+        output_dir = self._get_file_path(self.project_dir, "app/data/interim")
+
+        movies_filepath = self._get_file_path(output_dir, movies_output["filename"])
+        ratings_filepath = self._get_file_path(output_dir, ratings_output["filename"])
 
         os.makedirs(output_dir, exist_ok=True)
 
-        output_data.to_csv(output_filepath, index=False)
+        movies_output["dataframe"].to_csv(movies_filepath, index=False)
+        ratings_output["dataframe"].to_csv(ratings_filepath, index=False)
 
-        print(f"Dataset processed and saved to '{output_filepath}'")
+        print(f"Movies dataset processed and saved to '{movies_filepath}'")
+        print(f"Ratings dataset processed and saved to '{ratings_filepath}'")

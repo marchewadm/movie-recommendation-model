@@ -15,6 +15,9 @@ wheels/
 # Raw CSV files
 app/data/raw/*.csv
 
+# Intermediate CSV files
+app/data/interim/
+
 # Processed CSV files
 app/data/processed/
 
