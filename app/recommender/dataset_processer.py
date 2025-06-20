@@ -263,7 +263,15 @@ class DatasetProcesser(BaseRunner):
                 If at least one of the required MovieLens dataset files does not exist.
         """
 
-        self._verify_dataset_files_exist()
+        self._verify_required_files_exist(
+            self.raw_data_dir,
+            {
+                "movies.csv": self.movies_csv_file,
+                "ratings.csv": self.ratings_csv_file,
+                "links.csv": self.links_csv_file,
+                "tags.csv": self.tags_csv_file,
+            },
+        )
 
         movies_df, ratings_df, links_df, tags_df = self._load_raw_data()
 
@@ -272,35 +280,6 @@ class DatasetProcesser(BaseRunner):
         movies_df = self._filter_columns_for_export(movies_df)
 
         self._save_output(movies_df)
-
-    def _verify_dataset_files_exist(self) -> None:
-        """Checks if all required MovieLens dataset files exist.
-
-        Returns:
-            None
-
-        Raises:
-            FileNotFoundError:
-                If at least one of the required MovieLens dataset files does not exist.
-        """
-
-        required_files = {
-            "movies.csv": self.movies_csv_file,
-            "ratings.csv": self.ratings_csv_file,
-            "links.csv": self.links_csv_file,
-            "tags.csv": self.tags_csv_file,
-        }
-
-        missing_files = [
-            expected_name
-            for expected_name, actual_name in required_files.items()
-            if not os.path.exists(self._get_file_path(self.raw_data_dir, actual_name))
-        ]
-
-        if missing_files:
-            raise FileNotFoundError(
-                f"The following required files are missing: {', '.join(missing_files)}"
-            )
 
     def _load_raw_data(
         self,

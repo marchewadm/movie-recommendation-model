@@ -22,7 +22,7 @@ def main() -> None:
 
     run_dataset_processer(str_project_dir, str(RAW_DATA_DIR))
     run_movie_recommender_trainer(str_project_dir, str(PROCESSED_DATA_DIR))
-    run_movie_recommender_engine(296, str_project_dir, str(MODELS_DIR))
+    run_movie_recommender_engine(str_project_dir, str(MODELS_DIR), 296)
 
 
 if __name__ == "__main__":

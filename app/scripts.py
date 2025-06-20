@@ -60,7 +60,9 @@ def run_movie_recommender_trainer(project_dir: str, processed_data_dir: str) -> 
 
 
 def run_movie_recommender_engine(
-    movie_id: int, project_dir: str, model_dir: str
+    project_dir: str,
+    model_dir: str,
+    movie_id: int,
 ) -> None:
     """Initializes and runs the MovieRecommenderEngine.
 
@@ -70,17 +72,14 @@ def run_movie_recommender_engine(
     given movie ID.
 
     Args:
-        movie_id (int):
-            The ID of the movie for which to generate recommendations.
         project_dir (str):
             The root directory of the project as a string.
         model_dir (str):
             The directory where the trained recommendation model is located as a string.
+        movie_id (int):
+            The ID of the movie for which to generate recommendations.
     """
 
-    movie_recommender_engine = MovieRecommenderEngine(
-        project_dir,
-        model_dir,
-    )
+    movie_recommender_engine = MovieRecommenderEngine(project_dir, model_dir, movie_id)
 
-    movie_recommender_engine.run(movie_id)
+    movie_recommender_engine.run()

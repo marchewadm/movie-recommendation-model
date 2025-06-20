@@ -52,7 +52,6 @@ class MovieRecommenderTrainer(BaseRunner):
         """
 
         super().__init__(project_dir)
-        self.project_dir = project_dir
         self.processed_data_dir = processed_data_dir
         self.movies_csv_file = movies_csv_file
 
@@ -119,7 +118,12 @@ class MovieRecommenderTrainer(BaseRunner):
                 If the specified processed movies CSV file does not exist.
         """
 
-        self._verify_dataset_files_exist()
+        self._verify_required_files_exist(
+            self.processed_data_dir,
+            {
+                "movies_processed.csv": self.movies_csv_file,
+            },
+        )
 
         movies_df = self._load_processed_data()
         model = self._train_model(movies_df)
@@ -127,34 +131,6 @@ class MovieRecommenderTrainer(BaseRunner):
         model["movies_df"] = self._filter_columns_for_export(model["movies_df"])
 
         self._save_output(model)
-
-    def _verify_dataset_files_exist(self) -> None:
-        """Checks if all required processed dataset files exist.
-
-        Returns:
-            None
-
-        Raises:
-            FileNotFoundError:
-                If at least one of the required MovieLens dataset files does not exist.
-        """
-
-        required_files = {
-            "movies_processed.csv": self.movies_csv_file,
-        }
-
-        missing_files = [
-            expected_name
-            for expected_name, actual_name in required_files.items()
-            if not os.path.exists(
-                self._get_file_path(self.processed_data_dir, actual_name)
-            )
-        ]
-
-        if missing_files:
-            raise FileNotFoundError(
-                f"The following required files are missing: {', '.join(missing_files)}"
-            )
 
     def _load_processed_data(self) -> pd.DataFrame:
         """Loads processed data from CSV file.

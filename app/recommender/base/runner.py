@@ -1,7 +1,5 @@
 import os
 
-import pandas as pd
-
 from abc import ABC, abstractmethod
 
 
@@ -43,19 +41,43 @@ class BaseRunner(ABC):
 
         return os.path.join(directory, file_name)
 
-    @staticmethod
-    @abstractmethod
-    def _filter_columns_for_export(movies_df: pd.DataFrame) -> pd.DataFrame:
-        pass
-
     @abstractmethod
     def run(self) -> None:
         pass
 
-    @abstractmethod
-    def _verify_dataset_files_exist(self) -> None:
-        pass
+    def _verify_required_files_exist(
+        self, directory: str, required_files: dict[str, str]
+    ) -> None:
+        """Verifies the existence of all specified required files within a given directory.
 
-    @abstractmethod
-    def _save_output(self, output_data, file_name: str) -> None:
-        pass
+        This method iterates through a dictionary of expected file names and their
+        corresponding actual file names (as provided during class instantiation).
+        It checks if each file exists in the constructed path.
+
+        Args:
+            directory (str):
+                The directory path where the files are expected to be found.
+            required_files (dict[str, str]):
+                A dictionary where keys are the expected descriptive
+                names of the files (e.g., "example.txt") and values are the actual
+                file names (e.g., "self.example_txt_file") used to construct the path.
+                For example, { "example.txt": self.example_txt_file }
+
+        Returns:
+            None
+
+        Raises:
+            FileNotFoundError:
+                If one or more of the required files do not exist in the specified directory.
+        """
+
+        missing_files = [
+            expected_name
+            for expected_name, actual_name in required_files.items()
+            if not os.path.exists(self._get_file_path(directory, actual_name))
+        ]
+
+        if missing_files:
+            raise FileNotFoundError(
+                f"The following required files are missing: {', '.join(missing_files)}"
+            )

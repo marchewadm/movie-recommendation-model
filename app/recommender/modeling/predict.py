@@ -1,4 +1,3 @@
-import os
 import pickle
 
 import pandas as pd
@@ -7,9 +6,10 @@ import numpy as np
 from prettytable import PrettyTable
 
 from app.utils.model_types import TrainedModel
+from app.recommender.base.runner import BaseRunner
 
 
-class MovieRecommenderEngine:
+class MovieRecommenderEngine(BaseRunner):
     """Load a trained movie recommendation model and generate recommendations.
 
     Attributes:
@@ -17,6 +17,8 @@ class MovieRecommenderEngine:
             The root directory of the project.
         model_dir (str):
             The directory where the trained recommendation model is stored.
+        movie_id (int):
+            The ID of the movie for which to find recommendations.
         trained_pkl_file (str):
             The filename of trained recommendation model.
             Defaults to "recommendation_model.pkl".
@@ -26,6 +28,7 @@ class MovieRecommenderEngine:
         self,
         project_dir: str,
         model_dir: str,
+        movie_id: int,
         trained_pkl_file: str = "recommendation_model.pkl",
     ) -> None:
         """Initializes the MovieRecommenderEngine with file paths and directories.
@@ -35,31 +38,17 @@ class MovieRecommenderEngine:
                 The root directory of the project.
             model_dir (str):
                 The directory where the trained recommendation model is stored.
+            movie_id (int):
+                The ID of the movie for which to find recommendations.
             trained_pkl_file (str):
                 The filename of trained recommendation model.
                 Defaults to "recommendation_model.pkl".
         """
 
-        self.project_dir = project_dir
+        super().__init__(project_dir)
         self.model_dir = model_dir
+        self.movie_id = movie_id
         self.trained_pkl_file = trained_pkl_file
-
-    @staticmethod
-    def _get_file_path(directory: str, file_name: str) -> str:
-        """Constructs the full path for a given file name.
-
-        Args:
-            directory (str):
-                The directory in which the file is located or should be created.
-            file_name (str):
-                The name of the file.
-
-        Returns:
-            str:
-                The full path to the file.
-        """
-
-        return os.path.join(directory, file_name)
 
     @staticmethod
     def _read_data_from_model(
@@ -240,26 +229,30 @@ class MovieRecommenderEngine:
 
         print(table)
 
-    def run(self, movie_id: int) -> None:
+    def run(self) -> None:
         """Executes the movie recommendation process for a given movie ID.
 
         This method orchestrates loading the recommendation model, extracting its
         components, finding similar movie recommendations, and displaying them in a
         formatted table.
 
-        Args:
-            movie_id (int): The ID of the movie for which to find recommendations.
-
         Returns:
             None
+
+        Raises:
+            FileNotFoundError:
+                If at least one of the required models does not exist.
         """
 
+        self._verify_required_files_exist(
+            self.model_dir, {"recommendation_model.pkl": self.trained_pkl_file}
+        )
         model = self._load_model()
 
         movies_df, cosine_sim, movie_id_to_index = self._read_data_from_model(model)
 
         recommendations = self._find_movie_recommendations(
-            movie_id, movie_id_to_index, movies_df, cosine_sim
+            self.movie_id, movie_id_to_index, movies_df, cosine_sim
         )
 
         self._display_recommendations(recommendations)
