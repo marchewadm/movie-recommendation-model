@@ -209,8 +209,8 @@ class FeatureEngineer(BaseRunner):
                 A tuple containing movies and ratings DataFrames.
         """
 
-        movies_path = self._get_file_path(self.interim_data_dir, self.movies_csv_file)
-        ratings_path = self._get_file_path(self.interim_data_dir, self.ratings_csv_file)
+        movies_path = self._join_paths(self.interim_data_dir, self.movies_csv_file)
+        ratings_path = self._join_paths(self.interim_data_dir, self.ratings_csv_file)
 
         movies_df = pd.read_csv(movies_path)
         ratings_df = pd.read_csv(ratings_path)
@@ -258,9 +258,9 @@ class FeatureEngineer(BaseRunner):
             None
         """
 
-        output_dir = self._get_file_path(self.project_dir, "app/data/processed")
+        output_dir = self._join_paths(self.project_dir, "app/data/processed")
 
-        movies_filepath = self._get_file_path(output_dir, movies_output["filename"])
+        movies_filepath = self._join_paths(output_dir, movies_output["filename"])
 
         os.makedirs(output_dir, exist_ok=True)
 

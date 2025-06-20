@@ -21,7 +21,6 @@ class MovieRecommenderEngine(BaseRunner):
             The ID of the movie for which to find recommendations.
         trained_pkl_file (str):
             The filename of trained recommendation model.
-            Defaults to "recommendation_model.pkl".
     """
 
     def __init__(
@@ -264,9 +263,7 @@ class MovieRecommenderEngine(BaseRunner):
             A TypedDict containing the loaded model components.
         """
 
-        with open(
-            self._get_file_path(self.model_dir, self.trained_pkl_file), "rb"
-        ) as f:
+        with open(self._join_paths(self.model_dir, self.trained_pkl_file), "rb") as f:
             model: TrainedModel = pickle.load(f)
 
         return model

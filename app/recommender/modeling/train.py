@@ -27,7 +27,6 @@ class MovieRecommenderTrainer(BaseRunner):
             The directory where the processed data is stored.
         movies_csv_file (str):
             The filename of processed movies csv file.
-            Defaults to "movies_processed.csv".
     """
 
     def __init__(
@@ -140,7 +139,7 @@ class MovieRecommenderTrainer(BaseRunner):
                 A DataFrame containing the processed movie data.
         """
 
-        movies_path = self._get_file_path(self.processed_data_dir, self.movies_csv_file)
+        movies_path = self._join_paths(self.processed_data_dir, self.movies_csv_file)
 
         movies_df = pd.read_csv(movies_path)
 

@@ -25,21 +25,22 @@ class BaseRunner(ABC):
         self.project_dir = project_dir
 
     @staticmethod
-    def _get_file_path(directory: str, file_name: str) -> str:
-        """Constructs the full path for a given file name.
+    def _join_paths(base_path: str, *path_segments: str) -> str:
+        """Joins multiple path segments into a single, complete path.
 
         Args:
-            directory (str):
-                The directory in which the file is located or should be created.
-            file_name (str):
-                The name of the file.
+            base_path (str):
+                The initial path component (e.g., a directory, a root path).
+            *path_segments (str):
+                One or more additional path components to be joined to the base_path.
+                These can be subdirectories, file names, or other path parts.
 
         Returns:
             str:
-                The full path to the file.
+                The full, combined path.
         """
 
-        return os.path.join(directory, file_name)
+        return os.path.join(base_path, *path_segments)
 
     @abstractmethod
     def run(self) -> None:
@@ -48,7 +49,7 @@ class BaseRunner(ABC):
     def _verify_required_files_exist(
         self, directory: str, required_files: dict[str, str]
     ) -> None:
-        """Verifies the existence of all specified required files within a given directory.
+        """Check the existence of all specified required files within a given directory.
 
         This method iterates through a dictionary of expected file names and their
         corresponding actual file names (as provided during class instantiation).
@@ -68,13 +69,14 @@ class BaseRunner(ABC):
 
         Raises:
             FileNotFoundError:
-                If one or more of the required files do not exist in the specified directory.
+                If one or more of the required files
+                do not exist in the specified directory.
         """
 
         missing_files = [
             expected_name
             for expected_name, actual_name in required_files.items()
-            if not os.path.exists(self._get_file_path(directory, actual_name))
+            if not os.path.exists(self._join_paths(directory, actual_name))
         ]
 
         if missing_files:

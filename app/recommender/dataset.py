@@ -202,10 +202,10 @@ class DatasetProcesser(BaseRunner):
                 A tuple containing DataFrames for movies, ratings, links, and tags.
         """
 
-        movies_path = self._get_file_path(self.raw_data_dir, self.movies_csv_file)
-        ratings_path = self._get_file_path(self.raw_data_dir, self.ratings_csv_file)
-        links_path = self._get_file_path(self.raw_data_dir, self.links_csv_file)
-        tags_path = self._get_file_path(self.raw_data_dir, self.tags_csv_file)
+        movies_path = self._join_paths(self.raw_data_dir, self.movies_csv_file)
+        ratings_path = self._join_paths(self.raw_data_dir, self.ratings_csv_file)
+        links_path = self._join_paths(self.raw_data_dir, self.links_csv_file)
+        tags_path = self._join_paths(self.raw_data_dir, self.tags_csv_file)
 
         movies_df = pd.read_csv(movies_path)
         ratings_df = pd.read_csv(ratings_path)
@@ -342,11 +342,10 @@ class DatasetProcesser(BaseRunner):
             None
         """
 
-        # TODO: change function name
-        output_dir = self._get_file_path(self.project_dir, "app/data/interim")
+        output_dir = self._join_paths(self.project_dir, "app/data/interim")
 
-        movies_filepath = self._get_file_path(output_dir, movies_output["filename"])
-        ratings_filepath = self._get_file_path(output_dir, ratings_output["filename"])
+        movies_filepath = self._join_paths(output_dir, movies_output["filename"])
+        ratings_filepath = self._join_paths(output_dir, ratings_output["filename"])
 
         os.makedirs(output_dir, exist_ok=True)
 
